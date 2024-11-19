@@ -54,7 +54,7 @@ prompt=[
     The SQL command will be something like this SELECT COUNT(*) FROM STUDENTS WHERE CLASS = 'computer engineering';
     \nExample 10 - Find students who are not in section 'A'.,
     The SQL command will be something like this SELECT * FROM STUDENTS WHERE SECTION != 'A';
-    \nExample 11 - Display students' names and sections where the class contains 'Data'.,
+    \nExample 11 - Display students' names and sections where the class contains 'Data';
     The SQL command will be something like this SELECT NAME, SECTION FROM STUDENTS WHERE CLASS LIKE '%Data%';
     also the sql code should not have ``` in beginning or end and sql word in output 
      
@@ -81,22 +81,40 @@ question=st.text_input("Input: ",key="input")
 submit=st.button("Ask the question")
 
 if submit:
-    # Assuming get_gemini_response is defined somewhere and returns the prompt's response
-    response = get_gemini_response(question, prompt)
-    print(response)
-    
-    # Assuming read_sql_query takes the response and returns the result of a SQL query
-    response_data = read_sql_query(response, "STUDENTS.db")
-    
-    if response_data:  # Check if there is data returned
-        st.subheader("The Response is")
+    try:
+        # Assuming get_gemini_response is defined and returns the prompt's response
+        response = get_gemini_response(question, prompt)
         
-        # Displaying each row in a formatted way
-        for row in response_data:
-            # You may want to display specific columns or format the row better
-            print(row)
-            st.write(row)  # Use st.write instead of st.header for better formatting
-        
-    else:
-        st.write("No data returned for this query.")
+        # Output the response (for debugging purposes)
+        st.write(f"Generated SQL Query: {response}")
+
+        # Check if the response is valid and contains a query
+        if response.strip() == "":
+            st.write("The generated SQL query is empty. Please ask a valid question.")
+        else:
+            # Assuming read_sql_query takes the response and returns the result of a SQL query
+            response_data = read_sql_query(response, "STUDENTS.db")
+
+            # If there is data returned, display it in a more readable format
+            if response_data:
+                st.subheader("Query Results:")
+
+                # Convert rows to a table-like format using st.write for better readability
+                st.write("Here are the results for your query:")
+
+                # Check if the returned data is a single row or multiple rows
+                if len(response_data) == 1:
+                    # For single-row results, format nicely
+                    st.write(response_data[0])
+                else:
+                    # For multi-row results, display as a table
+                    st.dataframe(response_data)
+
+            else:
+                st.write("No data returned for this query. It may be an invalid SQL query or no data matches the criteria.")
+    
+    except Exception as e:
+        # Catch any errors (API or database issues) and display an error message
+        st.error(f"An error occurred: {str(e)}")
+        print(f"Error: {str(e)}")
 
